@@ -1,4 +1,5 @@
-from conans import ConanFile, CMake, tools
+import os
+from conans import ConanFile, tools
 
 
 class MrubyConan(ConanFile):
@@ -10,39 +11,52 @@ class MrubyConan(ConanFile):
     description = "<Description of Mruby here>"
     topics = ("<Put some tag here>", "<here>", "<and here>")
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    options = {
+        "enable_cxx_abi": [True, False]
+    }
+    default_options = \
+        "enable_cxx_abi=False"
     generators = "cmake"
+    source_subfolder = "mruby-{version}".format(version=version)
 
     def source(self):
-        self.run("git clone https://github.com/memsharded/hello.git")
-        self.run("cd hello && git checkout static_shared")
-        # This small hack might be useful to guarantee proper /MT /MD linkage
-        # in MSVC if the packaged project doesn't have variables to set it
-        # properly
-        tools.replace_in_file("hello/CMakeLists.txt", "PROJECT(MyHello)",
-                              '''PROJECT(MyHello)
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()''')
+        url = "https://github.com/mruby/mruby/archive/{version}.tar.gz".format(version=self.version)
+        tools.get(url)
 
     def build(self):
-        cmake = CMake(self)
-        cmake.configure(source_folder="hello")
-        cmake.build()
+        with tools.chdir(self.source_subfolder):
+            build_config = "build_config.rb"
+            os.rename(build_config, build_config + ".0")
+            with open(build_config, "w") as f:
+                f.write("MRuby::Build.new do |conf|\n")
+                if self.settings.compiler == "Visual Studio":
+                    f.write("  toolchain :visualcpp\n")
+                else:
+                    f.write("  toolchain :gcc\n")
 
-        # Explicit way:
-        # self.run('cmake %s/hello %s'
-        #          % (self.source_folder, cmake.command_line))
-        # self.run("cmake --build . %s" % cmake.build_config)
+                if self.settings.build_type == "Debug":
+                    f.write("  enable_debug\n")
+                if self.options.enable_cxx_abi:
+                    f.write("  enable_cxx_abi\n")
+                
+                # default gembox
+                f.write("  conf.gembox 'default'\n")
+
+                f.write("end\n")
+                
+            with tools.vcvars(self.settings):
+                self.run("ruby minirake")
 
     def package(self):
-        self.copy("*.h", dst="include", src="hello")
-        self.copy("*hello.lib", dst="lib", keep_path=False)
-        self.copy("*.dll", dst="bin", keep_path=False)
-        self.copy("*.so", dst="lib", keep_path=False)
-        self.copy("*.dylib", dst="lib", keep_path=False)
-        self.copy("*.a", dst="lib", keep_path=False)
+        self.copy("*.h", dst="include", src=os.path.join(self.source_subfolder, "include"))
+        self.copy("*.lib", src=self.source_subfolder)
+        self.copy("*", dst="bin", src=os.path.join(self.source_subfolder, "bin"), excludes=".gitkeep")
 
     def package_info(self):
-        self.cpp_info.libs = ["hello"]
+        if self.options.enable_cxx_abi: 
+            self.cpp_info.defines.append("MRB_ENABLE_CXX_ABI")
+            self.cpp_info.defines.append("MRB_ENABLE_CXX_EXCEPTION")
+        self.cpp_info.libdirs = ["build/host/lib"]
+        self.cpp_info.libs = ["libmruby"]
+        self.cpp_info.libs.append("ws2_32")
 
