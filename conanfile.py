@@ -50,6 +50,7 @@ class MrubyConan(ConanFile):
     def package(self):
         self.copy("*.h", dst="include", src=os.path.join(self.source_subfolder, "include"))
         self.copy("*.lib", src=self.source_subfolder)
+        self.copy("*.a", src=self.source_subfolder)
         self.copy("*", dst="bin", src=os.path.join(self.source_subfolder, "bin"), excludes=".gitkeep")
 
     def package_info(self):
@@ -57,6 +58,8 @@ class MrubyConan(ConanFile):
             self.cpp_info.defines.append("MRB_ENABLE_CXX_ABI")
             self.cpp_info.defines.append("MRB_ENABLE_CXX_EXCEPTION")
         self.cpp_info.libdirs = ["build/host/lib"]
-        self.cpp_info.libs = ["libmruby"]
-        self.cpp_info.libs.append("ws2_32")
+        if self.settings.compiler == "Visual Studio":
+            self.cpp_info.libs = ["libmruby", "ws2_32"]
+        else:
+            self.cpp_info.libs = ["mruby"]
 
