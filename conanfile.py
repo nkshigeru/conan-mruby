@@ -19,6 +19,14 @@ class MrubyConan(ConanFile):
     generators = "cmake"
     source_subfolder = "mruby-{version}".format(version=version)
 
+    def build_requirements(self):
+        if tools.os_info.is_linux:
+            installer = tools.SystemPackageTool()
+            installer.install("ruby")
+            installer.install("bison")
+        if tools.os_info.is_windows:
+            self.build_requires("ruby_installer/2.5.1@bincrafters/stable")
+
     def source(self):
         url = "https://github.com/mruby/mruby/archive/{version}.tar.gz".format(version=self.version)
         tools.get(url)
