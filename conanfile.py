@@ -1,5 +1,5 @@
 import os
-from conans import ConanFile, tools
+from conans import ConanFile, tools, AutoToolsBuildEnvironment
 
 
 class MrubyConan(ConanFile):
@@ -47,10 +47,23 @@ class MrubyConan(ConanFile):
                 if self.options.enable_cxx_abi:
                     f.write("  enable_cxx_abi\n")
                 
+                env = AutoToolsBuildEnvironment(self)
+                f.write("  conf.cc do |cc|\n")
+                f.write("    cc.flags << %s\n" % env.flags)
+                f.write("    cc.defines << %s\n" % env.defines)
+                f.write("  end\n")
+                f.write("  conf.linker do |linker|\n")
+                f.write("    linker.flags << %s\n" % env.link_flags)
+                f.write("  end\n")
+                
                 # default gembox
                 f.write("  conf.gembox 'default'\n")
 
                 f.write("end\n")
+            
+            print("== generated build_config.rb ==")
+            print(open(build_config, "r").read())
+            print("===============================")
                 
             with tools.vcvars(self.settings):
                 self.run("ruby minirake")
