@@ -27,6 +27,18 @@ class MrubyConan(ConanFile):
         if tools.os_info.is_windows:
             self.build_requires("ruby_installer/2.5.1@bincrafters/stable")
 
+    def system_requirements(self):
+        if self.settings.os == 'Linux' and tools.os_info.is_linux:
+            if tools.os_info.with_apt:
+                installer = tools.SystemPackageTool()
+                if self.settings.arch == 'x86':
+                    arch_suffix = ':i386'
+                elif self.settings.arch == 'x86_64':
+                    arch_suffix = ':amd64'
+                packages = ['libreadline-dev%s' % arch_suffix]
+                for package in packages:
+                    installer.install(package)
+
     def source(self):
         url = "https://github.com/mruby/mruby/archive/{version}.tar.gz".format(version=self.version)
         tools.get(url)
