@@ -35,7 +35,8 @@ class MrubyConan(ConanFile):
                     arch_suffix = ':i386'
                 elif self.settings.arch == 'x86_64':
                     arch_suffix = ':amd64'
-                packages = ['libreadline-dev%s' % arch_suffix]
+                packages = ['libreadline-dev%s' % arch_suffix,
+                            'libncurses-dev%s' % arch_suffix]
                 for package in packages:
                     installer.install(package)
 
