@@ -33,6 +33,7 @@ class MrubyConan(ConanFile):
             installer.install("bison")
         if tools.os_info.is_windows:
             self.build_requires("ruby_installer/2.5.1@bincrafters/stable")
+            self.build_requires("msys2_installer/latest@bincrafters/stable")
 
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
