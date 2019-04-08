@@ -1,5 +1,5 @@
 import os
-from conans import ConanFile, tools, AutoToolsBuildEnvironment
+from conans import ConanFile, tools, AutoToolsBuildEnvironment, VisualStudioBuildEnvironment
 
 
 class MrubyConan(ConanFile):
@@ -78,6 +78,15 @@ class MrubyConan(ConanFile):
                     f.write("  conf.linker do |linker|\n")
                     f.write("    linker.flags << %%w(%s)\n" % vars["LDFLAGS"])
                     f.write("  end\n")
+                else:
+                    env = VisualStudioBuildEnvironment(self)
+                    vars = env.vars
+                    print(vars)
+                    f.write("  conf.cc do |cc|\n")
+                    f.write("    cc.flags << %%w(%s)\n" % vars["CL"])
+                    f.write("    print(cc.flags)\n")
+                    f.write("  end\n")
+
                 
                 # default gembox
                 f.write("  conf.gembox 'default'\n")

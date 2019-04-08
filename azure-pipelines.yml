@@ -4,6 +4,7 @@ jobs:
     vmImage: 'vs2017-win2016'
   variables:
     CONAN_VISUAL_VERSIONS: 15
+    CONAN_OPTINS: "mruby:enable_cxx_abi=True"
   strategy:
     matrix:
       x86:
@@ -19,5 +20,6 @@ jobs:
   variables:
     DEVELOPER_DIR: /Applications/Xcode_10.1.app
     CONAN_APPLE_CLANG_VERSIONS: 10.0
+    CONAN_OPTINS: "mruby:enable_cxx_abi=True"
   steps:
   - template: .ci/azure-pipelines/build.yml
