@@ -22,6 +22,10 @@ class MrubyConan(ConanFile):
     generators = "cmake"
     source_subfolder = "mruby-{version}".format(version=version)
 
+    def config_options(self):
+        if self.settings.os == 'Windows':
+            del self.options.fPIC
+
     def build_requirements(self):
         if tools.os_info.is_linux:
             installer = tools.SystemPackageTool()
@@ -63,14 +67,16 @@ class MrubyConan(ConanFile):
                 if self.options.enable_cxx_abi:
                     f.write("  enable_cxx_abi\n")
                 
-                env = AutoToolsBuildEnvironment(self)
-                f.write("  conf.cc do |cc|\n")
-                f.write("    cc.flags << %s\n" % env.flags)
-                f.write("    cc.defines << %s\n" % env.defines)
-                f.write("  end\n")
-                f.write("  conf.linker do |linker|\n")
-                f.write("    linker.flags << %s\n" % env.link_flags)
-                f.write("  end\n")
+                if self.settings.compiler != "Visual Studio":
+                    env = AutoToolsBuildEnvironment(self)
+                    vars = env.vars
+                    c_flags = vars["CFLAGS"] + " " + vars["CPPFLAGS"]
+                    f.write("  conf.cc do |cc|\n")
+                    f.write("    cc.flags << %%w(%s)\n" % c_flags)
+                    f.write("  end\n")
+                    f.write("  conf.linker do |linker|\n")
+                    f.write("    linker.flags << %%w(%s)\n" % vars["LDFLAGS"])
+                    f.write("  end\n")
                 
                 # default gembox
                 f.write("  conf.gembox 'default'\n")
