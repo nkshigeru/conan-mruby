@@ -12,10 +12,13 @@ class MrubyConan(ConanFile):
     topics = ("<Put some tag here>", "<here>", "<and here>")
     settings = "os", "compiler", "build_type", "arch"
     options = {
-        "enable_cxx_abi": [True, False]
+        "enable_cxx_abi": [True, False],
+        "fPIC": [True, False],
     }
-    default_options = \
-        "enable_cxx_abi=False"
+    default_options = {
+        "enable_cxx_abi": False,
+        "fPIC": True,
+    }
     generators = "cmake"
     source_subfolder = "mruby-{version}".format(version=version)
 
